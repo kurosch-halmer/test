@@ -1,6 +1,38 @@
 version: "3.8"
 
 services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: postgres
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRES_USER: pguser
+      POSTGRES_PASSWORD: pgpass
+      POSTGRES_DB: testdb
+    volumes:
+      - pg_data:/var/lib/postgresql/data
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U pguser -d testdb" ]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  pgadmin:
+    image: dpage/pgadmin4:8
+    container_name: pgadmin
+    depends_on:
+      postgres:
+        condition: service_healthy
+    ports:
+      - "5050:80"
+    environment:
+      PGADMIN_DEFAULT_EMAIL: admin@example.com
+      PGADMIN_DEFAULT_PASSWORD: admin
+      # optional: persist pgAdmin config
+      # volumes:
+      #   - pgadmin_data:/var/lib/pgadmin
+
   mongodb:
     image: mongo:7
     container_name: mongodb
@@ -65,3 +97,4 @@ services:
 volumes:
   mongo_data:
   kafka_data:
+  pg_data:
